@@ -1,0 +1,116 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: celery-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+  celery-app:
+    build: .
+    container_name: celery-app
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+    depends_on:
+      - redis
+    command: sleep infinity
+
+  celery-worker-1:
+    build: .
+    container_name: celery-worker-1
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+    depends_on:
+      - redis
+    command: celery -A src.celery_app worker --loglevel=info --concurrency=2 --hostname=worker-1@%h
+
+  celery-worker-2:
+    build: .
+    container_name: celery-worker-2
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+    depends_on:
+      - redis
+    command: celery -A src.celery_app worker --loglevel=info --concurrency=2 --hostname=worker-2@%h
+
+  celery-worker-3:
+    build: .
+    container_name: celery-worker-3
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+    depends_on:
+      - redis
+    command: celery -A src.celery_app worker --loglevel=info --concurrency=2 --hostname=worker-3@%h
+
+  celery-beat:
+    build: .
+    container_name: celery-beat
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+    depends_on:
+      - redis
+      - celery-worker-1
+      - celery-worker-2
+      - celery-worker-3
+    command: celery -A src.celery_app beat --loglevel=info
+
+  flower:
+    build: .
+    container_name: celery-flower
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+    depends_on:
+      - redis
+      - celery-worker-1
+      - celery-worker-2
+      - celery-worker-3
+    ports:
+      - "5555:5555"
+    command: celery -A src.celery_app flower --port=5555 --broker=redis://redis:6379/0
+
+volumes:
+  redis_data:
