@@ -22,7 +22,6 @@ app = Celery(
         'demos.basic_demo',
         'demos.workflows',
         'demos.periodic',
-        'demos.error_handling',
     ]
 )
 
