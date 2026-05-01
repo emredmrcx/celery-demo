@@ -366,7 +366,7 @@ docker-compose logs --tail=20 celery-worker-1
 ```
 
 **What it shows:**
-- **Minute Health Check**: Runs every minute (changed from hourly)
+- **Hourly Health Check**: Runs every hour
 - **Daily Report Generation**: Runs daily at midnight
 - **Weekly Cleanup**: Runs weekly on Sunday at 2AM
 
