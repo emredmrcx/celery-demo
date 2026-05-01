@@ -357,14 +357,6 @@ CHUNKS DEMO COMPLETED
 
 Periodic tasks are configured in `demos/periodic.py` and run automatically when Celery Beat is started:
 
-```bash
-# Start Celery Beat (in addition to worker)
-docker-compose up -d celery-beat
-
-# Check scheduled tasks in worker logs
-docker-compose logs --tail=20 celery-worker-1
-```
-
 **What it shows:**
 - **Hourly Health Check**: Runs every hour
 - **Daily Report Generation**: Runs daily at midnight
@@ -374,6 +366,27 @@ docker-compose logs --tail=20 celery-worker-1
 ```
 [periodic] Running health check... | Worker: [hostname] | Time: [time]
 [periodic] Health check completed | Worker: [hostname]
+```
+
+To show in demo, first stop the setup
+```
+docker-compose down
+```
+
+Then, in `periodic.py` change :
+```
+'schedule': timedelta(hours=1),  # Run every hour
+```
+
+with
+
+```
+'schedule': timedelta(seconds=5),  # Run every 5 seconds
+```
+
+Start compose again:
+```
+docker-compose up -d
 ```
 
 ---
